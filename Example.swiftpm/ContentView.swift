@@ -42,7 +42,7 @@ struct ContentView: View {
     @ViewBuilder
     func container() -> some View {
         MergableContainer {
-            VStack(alignment: .leading) {
+            WrappingHStack(alignment: .leading) {
                 ForEach(tokens) { token in
                     Button(
                         action: {
@@ -54,6 +54,7 @@ struct ContentView: View {
                                 .bold()
                         }
                     )
+                    .labelStyle(.titleAndIcon)
                     .buttonStyle(.glass)
                     .mergeableItem(id: token.id)
                 }
@@ -130,5 +131,118 @@ struct TokenView: View {
             .bold()
             .padding()
             .glassEffect(.regular.interactive())
+    }
+}
+
+private struct WrappingHStack: Layout {
+    var alignment: HorizontalAlignment = .center
+    var horizontalSpacing: CGFloat = 8
+    var verticalSpacing: CGFloat = 8
+
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+        let rows = rows(for: proposal, subviews: subviews)
+        return CGSize(
+            width: proposal.width ?? rows.map(\.size.width).max() ?? 0,
+            height: rows.reduce(0) { height, row in
+                height + row.size.height
+            } + verticalSpacing * CGFloat(max(rows.count - 1, 0))
+        )
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+        let rows = rows(for: proposal, subviews: subviews)
+        var y = bounds.minY
+
+        for row in rows {
+            var x = xOffset(for: row, in: bounds)
+
+            for element in row.elements {
+                let point = CGPoint(
+                    x: x,
+                    y: y + (row.size.height - element.size.height) / 2
+                )
+
+                subviews[element.index].place(
+                    at: point,
+                    anchor: .topLeading,
+                    proposal: ProposedViewSize(element.size)
+                )
+
+                x += element.size.width + horizontalSpacing
+            }
+
+            y += row.size.height + verticalSpacing
+        }
+    }
+
+    private func rows(
+        for proposal: ProposedViewSize,
+        subviews: Subviews
+    ) -> [Row] {
+        let availableWidth = proposal.width ?? .infinity
+        var rows: [Row] = []
+        var currentRow = Row()
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let element = Element(index: index, size: size)
+            let nextWidth = currentRow.size.width + (currentRow.elements.isEmpty ? 0 : horizontalSpacing) + size.width
+
+            if nextWidth > availableWidth, currentRow.elements.isEmpty == false {
+                rows.append(currentRow)
+                currentRow = Row(element)
+            } else {
+                currentRow.append(element, spacing: horizontalSpacing)
+            }
+        }
+
+        if currentRow.elements.isEmpty == false {
+            rows.append(currentRow)
+        }
+
+        return rows
+    }
+
+    private func xOffset(for row: Row, in bounds: CGRect) -> CGFloat {
+        switch alignment {
+        case .leading:
+            bounds.minX
+        case .trailing:
+            bounds.maxX - row.size.width
+        default:
+            bounds.midX - row.size.width / 2
+        }
+    }
+
+    private struct Row {
+        var elements: [Element] = []
+        var size: CGSize = .zero
+
+        init() {}
+
+        init(_ element: Element) {
+            elements = [element]
+            size = element.size
+        }
+
+        mutating func append(_ element: Element, spacing: CGFloat) {
+            size.width += (elements.isEmpty ? 0 : spacing) + element.size.width
+            size.height = max(size.height, element.size.height)
+            elements.append(element)
+        }
+    }
+
+    private struct Element {
+        let index: Int
+        let size: CGSize
     }
 }
