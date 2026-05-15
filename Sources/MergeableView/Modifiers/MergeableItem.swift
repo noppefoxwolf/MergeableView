@@ -10,6 +10,9 @@ struct MergeableItem<ID: Hashable & Sendable>: ViewModifier {
     @Environment(\.mergeAction)
     private var mergeAction
 
+    @Environment(\.mergeCandidateAllows)
+    private var mergeCandidateAllows
+
     @Environment(\.mergeableItemFrameChanged)
     private var mergeableItemFrameChanged
 
@@ -45,7 +48,12 @@ struct MergeableItem<ID: Hashable & Sendable>: ViewModifier {
     private var mergeGesture: some Gesture {
         DragGesture(coordinateSpace: .named(MergeableItemLayout.coordinateSpace))
             .onEnded { value in
-                mergeDragEnded?(value.startLocation, value.location, mergeAction)
+                mergeDragEnded?(
+                    value.startLocation,
+                    value.location,
+                    mergeAction,
+                    mergeCandidateAllows
+                )
             }
     }
 }
