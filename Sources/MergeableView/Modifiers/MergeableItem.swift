@@ -48,11 +48,12 @@ struct MergeableItem<ID: Hashable & Sendable>: ViewModifier {
     private var mergeGesture: some Gesture {
         DragGesture(coordinateSpace: .named(MergeableItemLayout.coordinateSpace))
             .onEnded { value in
-                mergeDragEnded?(
-                    value.startLocation,
-                    value.location,
-                    mergeAction,
-                    mergeCandidateAllows
+                mergeDragEnded?(.init(
+                    startLocation: value.startLocation,
+                    currentLocation: value.location,
+                    action: mergeAction,
+                    candidateAllows: mergeCandidateAllows
+                )
                 )
             }
     }

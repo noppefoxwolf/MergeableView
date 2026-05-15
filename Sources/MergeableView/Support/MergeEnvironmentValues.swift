@@ -8,12 +8,7 @@ extension EnvironmentValues {
     typealias MergeCandidateAllows = @MainActor @Sendable (AnyHashable, AnyHashable) -> Bool
     
     @Entry
-    var mergeDragEnded:
-        (
-            @MainActor @Sendable (
-                CGPoint, CGPoint, MergeAction?, MergeCandidateAllows?
-            ) -> Void
-        )? = nil
+    var mergeDragEnded: (@MainActor @Sendable (MergeDragContext) -> Void)? = nil
 
     @Entry
     var mergeAction: MergeAction? = nil
@@ -24,4 +19,11 @@ extension EnvironmentValues {
     @Entry
     var mergeableItemFrameChanged:
         (@MainActor @Sendable (AnyHashable, CGRect?) -> Void)? = nil
+}
+
+struct MergeDragContext {
+    var startLocation: CGPoint
+    var currentLocation: CGPoint
+    var action: EnvironmentValues.MergeAction?
+    var candidateAllows: EnvironmentValues.MergeCandidateAllows?
 }

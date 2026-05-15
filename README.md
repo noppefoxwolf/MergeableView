@@ -4,7 +4,7 @@ MergeableView is a SwiftUI package for building Liquid Glass views that can be m
 
 The package provides a small set of primitives:
 
-- `MergableContainer` creates a shared glass effect and merge coordinate space.
+- `MergeableContainer` creates a shared glass effect and merge coordinate space.
 - `.mergeableItem(id:)` marks each view as a merge target.
 - `.onMerge` on `ForEach` reports the source and destination indices when a merge gesture completes.
 
@@ -32,7 +32,7 @@ Then add `MergeableView` to your target dependencies:
 
 ## Usage
 
-Import the package and wrap mergeable views in `MergableContainer`.
+Import the package and wrap mergeable views in `MergeableContainer`.
 
 ```swift
 import MergeableView
@@ -46,7 +46,7 @@ struct ContentView: View {
     ]
 
     var body: some View {
-        MergableContainer {
+        MergeableContainer {
             VStack(alignment: .leading) {
                 ForEach(tokens) { token in
                     Text(token.text)

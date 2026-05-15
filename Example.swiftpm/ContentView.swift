@@ -7,7 +7,7 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack(root: {
-            MergableContainer {
+            MergeableContainer {
                 WrappingHStack(alignment: .leading) {
                     ForEach(tokens) { token in
                         Button(

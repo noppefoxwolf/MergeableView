@@ -19,30 +19,37 @@ where
         modifier(
             OnMerge<ID>(
                 action: { sourceID, destinationID in
-                    guard
-                        let sourceIndex = data.firstIndex(where: { $0.id == sourceID }),
-                        let destinationIndex = data.firstIndex(where: { $0.id == destinationID }),
-                        abs(data.distance(from: sourceIndex, to: destinationIndex)) == 1
-                    else {
+                    guard let indexes = adjacentMergeIndexes(
+                        sourceID: sourceID,
+                        destinationID: destinationID
+                    ) else {
                         return
                     }
 
-                    action(
-                        data.distance(from: data.startIndex, to: sourceIndex),
-                        data.distance(from: data.startIndex, to: destinationIndex)
-                    )
+                    action(indexes.source, indexes.destination)
                 },
                 candidateAllows: { sourceID, destinationID in
-                    guard
-                        let sourceIndex = data.firstIndex(where: { $0.id == sourceID }),
-                        let destinationIndex = data.firstIndex(where: { $0.id == destinationID })
-                    else {
-                        return false
-                    }
-
-                    return abs(data.distance(from: sourceIndex, to: destinationIndex)) == 1
+                    adjacentMergeIndexes(sourceID: sourceID, destinationID: destinationID) != nil
                 }
             )
+        )
+    }
+
+    private func adjacentMergeIndexes(
+        sourceID: ID,
+        destinationID: ID
+    ) -> (source: Int, destination: Int)? {
+        guard
+            let sourceIndex = data.firstIndex(where: { $0.id == sourceID }),
+            let destinationIndex = data.firstIndex(where: { $0.id == destinationID }),
+            abs(data.distance(from: sourceIndex, to: destinationIndex)) == 1
+        else {
+            return nil
+        }
+
+        return (
+            source: data.distance(from: data.startIndex, to: sourceIndex),
+            destination: data.distance(from: data.startIndex, to: destinationIndex)
         )
     }
 }
