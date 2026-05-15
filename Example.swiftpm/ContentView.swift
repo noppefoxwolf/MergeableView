@@ -5,19 +5,13 @@ struct ContentView: View {
     @State
     private var tokens = Token.initialTokens
 
-    @State
-    var selections: [Token] = []
-
     var body: some View {
         NavigationStack(root: {
             MergableContainer {
                 WrappingHStack(alignment: .leading) {
                     ForEach(tokens) { token in
                         Button(
-                            action: {
-                                tokens.removeAll(where: { $0.id == token.id })
-                                selections.append(token)
-                            },
+                            action: {},
                             label: {
                                 Label(token.text, systemImage: "plus")
                                     .bold()
@@ -48,7 +42,6 @@ struct ContentView: View {
 
     private func resetTokens() {
         tokens = Token.initialTokens
-        selections = []
     }
 }
 
