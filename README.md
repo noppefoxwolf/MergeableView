@@ -10,7 +10,7 @@ The package provides a small set of primitives:
 
 ## Requirements
 
-- iOS 26.0+
+- iOS 26.0+ or macOS 26.0+
 - Swift 6
 - Swift Package Manager
 
