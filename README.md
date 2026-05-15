@@ -92,6 +92,8 @@ Drag from one mergeable item toward another item to trigger `.onMerge`. The call
 
 ## Example
 
+![Example](.github/example.gif)
+
 An example app is included in `Example.swiftpm`.
 
 Open `Example.swiftpm` in Xcode and run the `Example` app on an iOS 26 simulator or device.
