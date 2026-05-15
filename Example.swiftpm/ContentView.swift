@@ -119,21 +119,6 @@ extension Array where Element == Token {
     }
 }
 
-struct TokenView: View {
-    let token: Token
-
-    init(_ token: Token) {
-        self.token = token
-    }
-
-    var body: some View {
-        Text(token.text)
-            .bold()
-            .padding()
-            .glassEffect(.regular.interactive())
-    }
-}
-
 private struct WrappingHStack: Layout {
     var alignment: HorizontalAlignment = .center
     var horizontalSpacing: CGFloat = 8
