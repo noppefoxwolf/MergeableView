@@ -10,63 +10,40 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack(root: {
-            Form {
-                Section {
-                    HStack {
-                        ForEach(selections) { selection in
-                            Button {
-                                selections.removeAll(where: { $0.id == selection.id })
-                            } label: {
-                                Label(selection.text, systemImage: "xmark")
+            MergableContainer {
+                WrappingHStack(alignment: .leading) {
+                    ForEach(tokens) { token in
+                        Button(
+                            action: {
+                                tokens.removeAll(where: { $0.id == token.id })
+                                selections.append(token)
+                            },
+                            label: {
+                                Label(token.text, systemImage: "plus")
                                     .bold()
                             }
-                            .buttonStyle(.glass)
+                        )
+                        .labelStyle(.titleAndIcon)
+                        .buttonStyle(.glass)
+                        .mergeableItem(id: token.id)
+                    }
+                    .onMerge { (sourceIndex: Int, destinationIndex: Int) in
+                        tokens = tokens.merged(sourceIndex, with: destinationIndex) {
+                            source,
+                            destination in
+                            Token(text: [source.text, destination.text].joined(separator: " "))
                         }
                     }
                 }
-
-                Section {
-                    container()
-                }
             }
             .animation(.default, value: tokens)
-            .animation(.default, value: selections)
+            .padding()
             .toolbar {
                 ToolbarItem(placement: .destructiveAction) {
                     Button("Reset", action: resetTokens)
                 }
             }
         })
-    }
-
-    @ViewBuilder
-    func container() -> some View {
-        MergableContainer {
-            WrappingHStack(alignment: .leading) {
-                ForEach(tokens) { token in
-                    Button(
-                        action: {
-                            tokens.removeAll(where: { $0.id == token.id })
-                            selections.append(token)
-                        },
-                        label: {
-                            Label(token.text, systemImage: "plus")
-                                .bold()
-                        }
-                    )
-                    .labelStyle(.titleAndIcon)
-                    .buttonStyle(.glass)
-                    .mergeableItem(id: token.id)
-                }
-                .onMerge { (sourceIndex: Int, destinationIndex: Int) in
-                    tokens = tokens.merged(sourceIndex, with: destinationIndex) {
-                        source,
-                        destination in
-                        Token(text: [source.text, destination.text].joined(separator: " "))
-                    }
-                }
-            }
-        }
     }
 
     private func resetTokens() {
