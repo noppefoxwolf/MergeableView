@@ -1,6 +1,7 @@
 import SwiftUI
 
 extension View {
+    @available(iOS 26.0, *)
     public func mergeableItem<ID: Hashable & Sendable>(id: ID) -> some View {
         modifier(MergeableItem(id: id))
     }

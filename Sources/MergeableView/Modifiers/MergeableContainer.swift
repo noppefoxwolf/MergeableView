@@ -1,5 +1,6 @@
 import SwiftUI
 
+@available(iOS 26.0, *)
 public struct MergeableContainer<Content: View>: View {
     @State
     private var itemFrames: [MergeableItemID: CGRect] = [:]

@@ -1,5 +1,6 @@
 import SwiftUI
 
+@available(iOS 26.0, *)
 struct MergeableItem<ID: Hashable & Sendable>: ViewModifier {
     @Environment(\.mergeableNamespace)
     private var namespace
