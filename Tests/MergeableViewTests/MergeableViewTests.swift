@@ -26,12 +26,15 @@ import Testing
         ]
     )
 
-    let nearestID = resolver.nearestItemID(
+    let target = resolver.nearestTarget(
         from: CGPoint(x: 20, y: 20),
         toward: CGPoint(x: 150, y: 20)
     )
 
-    #expect(nearestID == "near")
+    #expect(target?.sourceID == "source")
+    #expect(target?.destinationID == "near")
+    #expect(target?.sourceFrame == CGRect(x: 0, y: 0, width: 40, height: 40))
+    #expect(target?.destinationFrame == CGRect(x: 60, y: 0, width: 40, height: 40))
 }
 
 @Test func resolverHonorsCandidateFilter() {
@@ -43,13 +46,13 @@ import Testing
         ]
     )
 
-    let nearestID = resolver.nearestItemID(
+    let target = resolver.nearestTarget(
         from: CGPoint(x: 20, y: 20),
         toward: CGPoint(x: 150, y: 20),
         candidateAllows: { _, destinationID in destinationID != "blocked" }
     )
 
-    #expect(nearestID == "allowed")
+    #expect(target?.destinationID == "allowed")
 }
 
 @Test func resolverIgnoresCandidatesOutsideDragDirection() {
@@ -60,17 +63,17 @@ import Testing
         ]
     )
 
-    let nearestID = resolver.nearestItemID(
+    let target = resolver.nearestTarget(
         from: CGPoint(x: 20, y: 20),
         toward: CGPoint(x: 80, y: 20)
     )
 
-    #expect(nearestID == nil)
+    #expect(target == nil)
 }
 
 @Test func lineSegmentIntersectionIncludesCrossingAndTouchingSegments() {
     #expect(
-        MergeLineSegment.intersects(
+        MergeGeometry.lineSegmentsIntersect(
             CGPoint(x: 0, y: 0),
             CGPoint(x: 10, y: 10),
             CGPoint(x: 0, y: 10),
@@ -78,7 +81,7 @@ import Testing
         )
     )
     #expect(
-        MergeLineSegment.intersects(
+        MergeGeometry.lineSegmentsIntersect(
             CGPoint(x: 0, y: 0),
             CGPoint(x: 10, y: 0),
             CGPoint(x: 10, y: 0),
@@ -89,7 +92,7 @@ import Testing
 
 @Test func lineSegmentIntersectionRejectsSeparatedSegments() {
     #expect(
-        MergeLineSegment.intersects(
+        MergeGeometry.lineSegmentsIntersect(
             CGPoint(x: 0, y: 0),
             CGPoint(x: 10, y: 0),
             CGPoint(x: 0, y: 10),

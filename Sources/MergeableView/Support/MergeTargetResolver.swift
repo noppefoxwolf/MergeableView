@@ -9,11 +9,11 @@ struct MergeTargetResolver<ID: Hashable> {
             .key
     }
 
-    func nearestItemID(
+    func nearestTarget(
         from startLocation: CGPoint,
         toward currentLocation: CGPoint,
         candidateAllows: (ID, ID) -> Bool = { _, _ in true }
-    ) -> ID? {
+    ) -> MergeTarget<ID>? {
         guard
             let sourceID = itemID(at: startLocation),
             let sourceFrame = itemFrames[sourceID]
@@ -30,8 +30,8 @@ struct MergeTargetResolver<ID: Hashable> {
             return nil
         }
 
-        let sourceCenter = sourceFrame.center
-        return itemFrames
+        let sourceCenter = MergeGeometry.center(of: sourceFrame)
+        let destination = itemFrames
             .filter { id, frame in
                 guard id != sourceID else {
                     return false
@@ -41,53 +41,59 @@ struct MergeTargetResolver<ID: Hashable> {
                     return false
                 }
 
-                guard frame.intersectsLineSegment(from: sourceCenter, to: currentLocation) else {
+                guard MergeGeometry.rect(frame, intersectsLineSegmentFrom: sourceCenter, to: currentLocation) else {
                     return false
                 }
 
+                let destinationCenter = MergeGeometry.center(of: frame)
                 let candidateDirection = CGVector(
-                    dx: frame.center.x - sourceCenter.x,
-                    dy: frame.center.y - sourceCenter.y
+                    dx: destinationCenter.x - sourceCenter.x,
+                    dy: destinationCenter.y - sourceCenter.y
                 )
                 return direction.dot(candidateDirection) > 0
             }
             .min { lhs, rhs in
-                sourceCenter.distance(to: lhs.value.center) < sourceCenter.distance(to: rhs.value.center)
-            }?
-            .key
+                MergeGeometry.distance(from: sourceCenter, to: MergeGeometry.center(of: lhs.value))
+                    < MergeGeometry.distance(from: sourceCenter, to: MergeGeometry.center(of: rhs.value))
+            }
+
+        guard let destination else {
+            return nil
+        }
+
+        return MergeTarget(
+            sourceID: sourceID,
+            destinationID: destination.key,
+            sourceFrame: sourceFrame,
+            destinationFrame: destination.value
+        )
     }
 }
 
-extension CGPoint {
-    func distance(to point: CGPoint) -> CGFloat {
-        hypot(x - point.x, y - point.y)
-    }
+struct MergeTarget<ID: Hashable> {
+    var sourceID: ID
+    var destinationID: ID
+    var sourceFrame: CGRect
+    var destinationFrame: CGRect
 }
 
-extension CGRect {
-    var center: CGPoint {
-        CGPoint(x: midX, y: midY)
+enum MergeGeometry {
+    static func center(of rect: CGRect) -> CGPoint {
+        CGPoint(x: rect.midX, y: rect.midY)
     }
 
-    func intersectsLineSegment(from start: CGPoint, to end: CGPoint) -> Bool {
-        contains(start) || contains(end)
-            || edges.contains { edgeStart, edgeEnd in
-                MergeLineSegment.intersects(start, end, edgeStart, edgeEnd)
+    static func distance(from start: CGPoint, to end: CGPoint) -> CGFloat {
+        hypot(start.x - end.x, start.y - end.y)
+    }
+
+    static func rect(_ rect: CGRect, intersectsLineSegmentFrom start: CGPoint, to end: CGPoint) -> Bool {
+        rect.contains(start) || rect.contains(end)
+            || edges(of: rect).contains { edgeStart, edgeEnd in
+                lineSegmentsIntersect(start, end, edgeStart, edgeEnd)
             }
     }
 
-    private var edges: [(CGPoint, CGPoint)] {
-        [
-            (CGPoint(x: minX, y: minY), CGPoint(x: maxX, y: minY)),
-            (CGPoint(x: maxX, y: minY), CGPoint(x: maxX, y: maxY)),
-            (CGPoint(x: maxX, y: maxY), CGPoint(x: minX, y: maxY)),
-            (CGPoint(x: minX, y: maxY), CGPoint(x: minX, y: minY))
-        ]
-    }
-}
-
-enum MergeLineSegment {
-    static func intersects(
+    static func lineSegmentsIntersect(
         _ firstStart: CGPoint,
         _ firstEnd: CGPoint,
         _ secondStart: CGPoint,
@@ -112,6 +118,15 @@ enum MergeLineSegment {
         }
 
         return firstToSecondStart != firstToSecondEnd && secondToFirstStart != secondToFirstEnd
+    }
+
+    private static func edges(of rect: CGRect) -> [(CGPoint, CGPoint)] {
+        [
+            (CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY)),
+            (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY)),
+            (CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY)),
+            (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.minY))
+        ]
     }
 
     private static func orientation(_ first: CGPoint, _ second: CGPoint, _ third: CGPoint) -> CGFloat {

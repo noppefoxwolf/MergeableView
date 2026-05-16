@@ -16,8 +16,8 @@ struct OnMerge<ID: Hashable & Sendable>: ViewModifier {
         content
             .environment(\.mergeAction) { sourceID, destinationID in
                 guard
-                    let sourceID = sourceID.base as? ID,
-                    let destinationID = destinationID.base as? ID
+                    let sourceID = sourceID.cast(to: ID.self),
+                    let destinationID = destinationID.cast(to: ID.self)
                 else {
                     return
                 }
@@ -26,8 +26,8 @@ struct OnMerge<ID: Hashable & Sendable>: ViewModifier {
             }
             .environment(\.mergeCandidateAllows) { sourceID, destinationID in
                 guard
-                    let sourceID = sourceID.base as? ID,
-                    let destinationID = destinationID.base as? ID
+                    let sourceID = sourceID.cast(to: ID.self),
+                    let destinationID = destinationID.cast(to: ID.self)
                 else {
                     return false
                 }

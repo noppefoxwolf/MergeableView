@@ -13,8 +13,8 @@ struct MergeableItem<ID: Hashable & Sendable>: ViewModifier {
     @Environment(\.mergeCandidateAllows)
     private var mergeCandidateAllows
 
-    @Environment(\.mergeableItemFrameChanged)
-    private var mergeableItemFrameChanged
+    @Environment(\.mergeableItemFrameUpdated)
+    private var mergeableItemFrameUpdated
 
     let id: ID
 
@@ -37,11 +37,11 @@ struct MergeableItem<ID: Hashable & Sendable>: ViewModifier {
             .onGeometryChange(for: CGRect.self) { proxy in
                 proxy.frame(in: .named(MergeableItemLayout.coordinateSpace))
             } action: { frame in
-                mergeableItemFrameChanged?(AnyHashable(id), frame)
+                mergeableItemFrameUpdated?(.changed(MergeableItemID(id), frame))
             }
             .highPriorityGesture(mergeGesture)
             .onDisappear {
-                mergeableItemFrameChanged?(AnyHashable(id), nil)
+                mergeableItemFrameUpdated?(.removed(MergeableItemID(id)))
             }
     }
 

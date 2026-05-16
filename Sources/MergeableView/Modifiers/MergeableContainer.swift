@@ -2,9 +2,9 @@ import SwiftUI
 
 public struct MergeableContainer<Content: View>: View {
     @State
-    private var itemFrames: [AnyHashable: CGRect] = [:]
+    private var itemFrames: [MergeableItemID: CGRect] = [:]
     @State
-    private var dragSelection = MergeDragSelection<AnyHashable>()
+    private var dragSelection = MergeDragSelection<MergeableItemID>()
 
     @Namespace
     private var namespace
@@ -19,7 +19,7 @@ public struct MergeableContainer<Content: View>: View {
         GlassEffectContainer(content: content)
             .environment(\.mergeableNamespace, namespace)
             .environment(\.mergeDragEnded, handleDragEnded)
-            .environment(\.mergeableItemFrameChanged, updateItemFrame)
+            .environment(\.mergeableItemFrameUpdated, updateItemFrame)
             .coordinateSpace(name: MergeableItemLayout.coordinateSpace)
     }
 
@@ -32,10 +32,11 @@ public struct MergeableContainer<Content: View>: View {
         mergeSelectedItems(perform: context.action)
     }
 
-    private func updateItemFrame(id: AnyHashable, frame: CGRect?) {
-        if let frame {
+    private func updateItemFrame(_ update: MergeableItemFrameUpdate) {
+        switch update {
+        case let .changed(id, frame):
             itemFrames[id] = frame
-        } else {
+        case let .removed(id):
             itemFrames.removeValue(forKey: id)
         }
     }
@@ -47,17 +48,17 @@ public struct MergeableContainer<Content: View>: View {
     ) {
         let resolver = MergeTargetResolver(itemFrames: itemFrames)
         dragSelection.startItemID = resolver.itemID(at: startLocation)
-        dragSelection.currentItemID = resolver.nearestItemID(
+        dragSelection.currentItemID = resolver.nearestTarget(
             from: startLocation,
             toward: currentLocation,
             candidateAllows: { sourceID, destinationID in
                 candidateAllows?(sourceID, destinationID) ?? true
             }
-        )
+        )?.destinationID
     }
 
     private func mergeSelectedItems(
-        perform action: (@MainActor @Sendable (AnyHashable, AnyHashable) -> Void)?
+        perform action: (@MainActor (MergeableItemID, MergeableItemID) -> Void)?
     ) {
         guard
             let sourceID = dragSelection.startItemID,
@@ -67,6 +68,6 @@ public struct MergeableContainer<Content: View>: View {
         }
 
         action?(sourceID, destinationID)
-        dragSelection = MergeDragSelection<AnyHashable>()
+        dragSelection = MergeDragSelection<MergeableItemID>()
     }
 }
